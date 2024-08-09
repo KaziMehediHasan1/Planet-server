@@ -62,7 +62,7 @@ async function run() {
     // verify admin..
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded;
-      console.log(email, "64");
+
       // const query = { email: email };
       const user = await UsersCollection.findOne(query);
       const isAdmin = user?.email === "admin";
@@ -103,7 +103,7 @@ async function run() {
       const user = await UsersCollection.findOne({ email: email });
 
       const isAdmin = user?.role === "admin";
-      console.log(isAdmin, "105");
+
       let updateStatus;
       if (isAdmin) {
         updateStatus = {
@@ -214,7 +214,7 @@ async function run() {
     // integrate payment system..
     app.post("/create-payment-intent", async (req, res) => {
       const { prices } = req.body;
-      console.log(prices);
+
       const amount = parseInt(prices * 100);
       const paymentIntent = await stripe.paymentIntents.create({
         amount: amount,
@@ -230,24 +230,14 @@ async function run() {
     app.post("/payment", verifyToken, async (req, res) => {
       const payment = req.body;
       const paymentResult = await PaymentCollection.insertOne(payment);
-
-      console.log("payment info", payment);
-      //
       res.send(paymentResult);
     });
 
     // get actual user payment..
-    app.get("/payment/:email", async (req, res) => {
-      const query = { email: req.params.email };
-      if (req.params?.email === req.decoded?.email) {
-        return res.status(403).send({ message: "forbidden access" });
-      }
-      const result = await PaymentCollection.find(query).toArray();
-      const subscriber = result.filter(
-        (sub) => sub?.email === query.email && sub?.transactionId
-      );
-      console.log(subscriber, "237");
-      res.send(subscriber);
+    app.get("/payment", async (req, res) => {
+      const data = req.body;
+      const result = await PaymentCollection.find(data).toArray();
+      res.send(result);
     });
     // Send a ping to confirm a successful connection
     // await client.db("admin").command({ ping: 1 });
