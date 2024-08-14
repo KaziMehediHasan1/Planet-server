@@ -13,8 +13,7 @@ app.use(express.json());
 
 // PlanetSite
 // sISMWDi7UlumUujP
-const uri =
-  "mongodb+srv://PlanetSite:sISMWDi7UlumUujP@cluster0.nfp7rpr.mongodb.net/?appName=Cluster0";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.nfp7rpr.mongodb.net/?appName=Cluster0`;
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
@@ -62,8 +61,7 @@ async function run() {
     // verify admin..
     const verifyAdmin = async (req, res, next) => {
       const email = req.decoded;
-
-      // const query = { email: email };
+      const query = { email: email };
       const user = await UsersCollection.findOne(query);
       const isAdmin = user?.email === "admin";
       if (!isAdmin) {
@@ -97,13 +95,10 @@ async function run() {
     //admin update approved articles(dashboard).
     app.patch("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
-
       const query = { _id: new ObjectId(id) };
       const email = req.decoded?.email;
       const user = await UsersCollection.findOne({ email: email });
-
       const isAdmin = user?.role === "admin";
-
       let updateStatus;
       if (isAdmin) {
         updateStatus = {
@@ -134,7 +129,7 @@ async function run() {
     });
 
     // Publisher related api..
-    app.post("/publisher", async (req, res) => {
+    app.post("/publisher", verifyAdmin, async (req, res) => {
       const publisher = req.body;
       const result = await PublisherCollection.insertOne(publisher);
       res.send(result);
@@ -163,6 +158,11 @@ async function run() {
       const user = req.body;
       const result = await UsersCollection.find(user).toArray();
       res.send(result);
+    });
+    // get user and use pagination in dashboard user component.
+    app.get("/dashUser", async (req, res) => {
+      const count = await UsersCollection.estimatedDocumentCount();
+      res.send({ count });
     });
 
     // Delete user From dashboard..
@@ -239,8 +239,7 @@ async function run() {
       const result = await PaymentCollection.find(data).toArray();
       res.send(result);
     });
-    // Send a ping to confirm a successful connection
-    // await client.db("admin").command({ ping: 1 })
+
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
