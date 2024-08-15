@@ -71,7 +71,7 @@ async function run() {
     };
 
     // all articles..
-    app.post("/articles", async (req, res) => {
+    app.post("/articles", verifyToken, async (req, res) => {
       const article = req.body;
       const result = await articlesCollection.insertOne(article);
       res.send(result);
@@ -83,6 +83,14 @@ async function run() {
       const result = await articlesCollection.find(articles).toArray();
       res.send(result);
     });
+
+    // get user and use pagination in dashboard
+    app.get("/articleCount", async (req, res) => {
+      console.log("pagination", req.query);
+      const ArticleCount = await articlesCollection.estimatedDocumentCount();
+      res.send({ count: ArticleCount });
+    });
+    
 
     // delete articles from dashboard..
     app.delete("/articles/:id", verifyToken, async (req, res) => {
@@ -166,15 +174,21 @@ async function run() {
     });
 
     // get all user in dashboard panel..!
-    app.get("/users", verifyToken, async (req, res) => {
+    app.get("/users", async (req, res) => {
       const user = req.body;
-      const result = await UsersCollection.find(user).toArray();
+      const size = parseInt(req.query.size);
+      const pages = parseInt(req.query.page);
+      const result = await UsersCollection.find(user)
+        .skip(pages * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
     // get user and use pagination in dashboard
     app.get("/dashUser", async (req, res) => {
+      console.log("pagination", req.query);
       const count = await UsersCollection.estimatedDocumentCount();
-      res.send({ count });
+      res.send({ count: count });
     });
 
     // Delete user From dashboard..
