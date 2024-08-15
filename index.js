@@ -90,7 +90,17 @@ async function run() {
       const ArticleCount = await articlesCollection.estimatedDocumentCount();
       res.send({ count: ArticleCount });
     });
-    
+    app.get("/paginationArticle", async (req, res) => {
+      const user = req.body;
+      const size = parseInt(req.query.size);
+      const pages = parseInt(req.query.page);
+      const result = await articlesCollection
+        .find(user)
+        .skip(pages * size)
+        .limit(size)
+        .toArray();
+      res.send(result);
+    });
 
     // delete articles from dashboard..
     app.delete("/articles/:id", verifyToken, async (req, res) => {
