@@ -117,6 +117,18 @@ async function run() {
       res.send(result);
     });
 
+    app.put("/articles/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const updateStatus = {
+        $set: {
+          premium: "isPremium",
+        },
+      };
+      const result = await articlesCollection.updateOne(query, updateStatus);
+      res.send(result);
+    });
+
     // user update userArticle isPremium (MyArticle).
     app.put("/viewCount/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -159,7 +171,7 @@ async function run() {
       const result = await UsersCollection.find(user).toArray();
       res.send(result);
     });
-    // get user and use pagination in dashboard user component.
+    // get user and use pagination in dashboard
     app.get("/dashUser", async (req, res) => {
       const count = await UsersCollection.estimatedDocumentCount();
       res.send({ count });
