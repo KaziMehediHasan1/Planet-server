@@ -79,10 +79,12 @@ async function run() {
 
     // read articles data from database..
     app.get("/articles", async (req, res) => {
-      const articles = req.body;
+      const articles = req.query;
       const result = await articlesCollection.find(articles).toArray();
       res.send(result);
     });
+
+    // article search related api..
 
     // get user and use pagination in dashboard
     app.get("/articleCount", async (req, res) => {
@@ -119,15 +121,11 @@ async function run() {
       const isAdmin = user?.role === "admin";
       let updateStatus;
       if (isAdmin) {
+        const decline = req.body;
         updateStatus = {
           $set: {
             status: "Approved",
-          },
-        };
-      } else {
-        updateStatus = {
-          $set: {
-            premium: "isPremium",
+            ...decline,
           },
         };
       }
@@ -135,6 +133,7 @@ async function run() {
       res.send(result);
     });
 
+    // admin update normal to premium article..
     app.put("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
@@ -147,6 +146,7 @@ async function run() {
       res.send(result);
     });
 
+   
     // user update userArticle isPremium (MyArticle).
     app.put("/viewCount/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -202,7 +202,6 @@ async function run() {
     });
 
     // Delete user From dashboard..
-
     app.delete("/users/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
