@@ -88,10 +88,10 @@ async function run() {
 
     // get user and use pagination in dashboard
     app.get("/articleCount", async (req, res) => {
-      console.log("pagination", req.query);
       const ArticleCount = await articlesCollection.estimatedDocumentCount();
       res.send({ count: ArticleCount });
     });
+
     app.get("/paginationArticle", async (req, res) => {
       const user = req.body;
       const size = parseInt(req.query.size);
@@ -146,7 +146,20 @@ async function run() {
       res.send(result);
     });
 
-   
+    // edit myArticles data
+    app.patch("/EditArticle/:id", verifyToken, async (req, res) => { 
+      const id = req.params.id;
+      const body = req.body;
+      const query = { _id: new ObjectId(id) };
+      const updateStatus = {
+        $set: {
+          ...body,
+        },
+      };
+      const result = await articlesCollection.updateOne(query, updateStatus);
+      res.send(result);
+    });
+
     // user update userArticle isPremium (MyArticle).
     app.put("/viewCount/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
@@ -274,6 +287,7 @@ async function run() {
       const result = await PaymentCollection.find(data).toArray();
       res.send(result);
     });
+    
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
