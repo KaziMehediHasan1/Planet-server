@@ -60,9 +60,10 @@ async function run() {
 
     // verify admin..
     const verifyAdmin = async (req, res, next) => {
-      const email = req.decoded;
-      const query = { email: email };
+      const role = req.decoded;
+      const query = { role: role };
       const user = await UsersCollection.findOne(query);
+      console.log(user, "66");
       const isAdmin = user?.email === "admin";
       if (!isAdmin) {
         return res.status(403).send({ message: "forbidden access" });
@@ -77,14 +78,24 @@ async function run() {
       res.send(result);
     });
 
-    // read articles data from database..
+    // read articles data from database and search..
     app.get("/articles", async (req, res) => {
-      const articles = req.query;
-      const result = await articlesCollection.find(articles).toArray();
+      const title = req.query.search;
+      // const filter = req.query.filter;
+      let query = {};
+      if (title) query.title = { $regex: title, $options: "i" };
+      // if (filter) query.filter = { $regex: publisher, $options: "i" };
+      // console.log(query);
+      const result = await articlesCollection.find(query).toArray();
       res.send(result);
     });
 
-    // article search related api..
+    // get all Articles..
+    app.get("/allArticles", async (req, res) => {
+      const allArticles = req.body;
+      const result = await articlesCollection.find(allArticles).toArray();
+      res.send(result);
+    });
 
     // get user and use pagination in dashboard
     app.get("/articleCount", async (req, res) => {
@@ -105,6 +116,14 @@ async function run() {
     });
 
     // delete articles from dashboard..
+    app.delete("/allArticles/:id", verifyToken, async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await articlesCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    // admin deleted data
     app.delete("/articles/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) };
@@ -147,7 +166,7 @@ async function run() {
     });
 
     // edit myArticles data
-    app.patch("/EditArticle/:id", verifyToken, async (req, res) => { 
+    app.patch("/EditArticle/:id", verifyToken, async (req, res) => {
       const id = req.params.id;
       const body = req.body;
       const query = { _id: new ObjectId(id) };
@@ -172,7 +191,7 @@ async function run() {
     });
 
     // Publisher related api..
-    app.post("/publisher", verifyAdmin, async (req, res) => {
+    app.post("/publisher", verifyToken, async (req, res) => {
       const publisher = req.body;
       const result = await PublisherCollection.insertOne(publisher);
       res.send(result);
@@ -209,7 +228,6 @@ async function run() {
     });
     // get user and use pagination in dashboard
     app.get("/dashUser", async (req, res) => {
-      console.log("pagination", req.query);
       const count = await UsersCollection.estimatedDocumentCount();
       res.send({ count: count });
     });
@@ -287,7 +305,6 @@ async function run() {
       const result = await PaymentCollection.find(data).toArray();
       res.send(result);
     });
-    
 
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
