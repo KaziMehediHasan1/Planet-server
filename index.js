@@ -78,14 +78,14 @@ async function run() {
       res.send(result);
     });
 
-    // read articles data from database and search..
+    // read articles data search and filter..
     app.get("/articles", async (req, res) => {
+      console.log(req.query);
       const title = req.query.search;
-      // const filter = req.query.filter;
+      const filter = req.query.filter;
       let query = {};
       if (title) query.title = { $regex: title, $options: "i" };
-      // if (filter) query.filter = { $regex: publisher, $options: "i" };
-      // console.log(query);
+      if (filter) query.publisher = filter;
       const result = await articlesCollection.find(query).toArray();
       res.send(result);
     });
