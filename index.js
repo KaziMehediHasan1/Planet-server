@@ -72,7 +72,7 @@ async function run() {
     };
 
     // all articles..
-    app.post("/articles", verifyToken, async (req, res) => {
+    app.post("/allArticles", verifyToken, async (req, res) => {
       const article = req.body;
       const result = await articlesCollection.insertOne(article);
       res.send(result);
