@@ -26,7 +26,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
-    await client.connect();
+    // await client.connect();
     const database = client.db("planet");
     const articlesCollection = database.collection("articles");
     const UsersCollection = database.collection("users");
@@ -60,11 +60,11 @@ async function run() {
 
     // verify admin..
     const verifyAdmin = async (req, res, next) => {
-      const role = req.decoded;
+      const role = req.decoded.role;
       const query = { role: role };
       const user = await UsersCollection.findOne(query);
       console.log(user, "66");
-      const isAdmin = user?.email === "admin";
+      const isAdmin = user?.role === "admin";
       if (!isAdmin) {
         return res.status(403).send({ message: "forbidden access" });
       }
@@ -306,9 +306,9 @@ async function run() {
       res.send(result);
     });
 
-    console.log(
-      "Pinged your deployment. You successfully connected to MongoDB!"
-    );
+    // console.log(
+    //   "Pinged your deployment. You successfully connected to MongoDB!"
+    // );
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
